@@ -1,0 +1,53 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-020",
+  "summary": "Adopt wellmanifest docs placement gate",
+  "workstream": "governance",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": ["project/ticket-020/**", ".governance/docs.json", "project/TICKETS.md"],
+  "forbiddenPaths": ["project/ticket-*/user-*.md"],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "825cc7ec712378cfbb47f54726af0f5e5ab2b978",
+    "targetBranch": "main",
+    "outcome": "Adopt the immutable wellmanifest/docs placement contract for Taskand without changing runtime behavior or creating a competing report standard.",
+    "nonGoals": [
+      "Creating or rewriting wellmanifest/docs or wellmanifest/report",
+      "Moving private logs, secrets, receipts or snapshots into the repository",
+      "Repairing unrelated pre-existing documentation findings in this ticket",
+      "Changing active Taskand runtime behavior or ticket-018 panel work"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Bind Taskand to the existing wellmanifest/docs source revision and policy digest through the repository adoption file; let the trusted checker enforce canonical paths and metadata.",
+      "components": [
+        {"name": "governance-adoption", "paths": [".governance/docs.json"]}
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {"impact": "none", "states": [], "evidence": []},
+      "rollback": "Revert the adoption file through the protected delivery process; retain durable docs and private recovery evidence."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {"criterion": "AC-01", "commands": ["pinned Docs check --deliverable docs/refactoring/llm-development-optimization-plan.md"], "evidence": "Checker JSON and policy digest"},
+      {"criterion": "AC-02", "commands": ["./project/governance-check.sh", "git diff --check"], "evidence": "Managed governance and adoption binding"}
+    ]
+  }
+}
