@@ -23,15 +23,16 @@ export const HANDLERS = {
   vault: () => replyOf(call(P('vault/secrets'), { action: 'status' })),
   'file-list': ({ text }) => fileList(text),
   browser: ({ text }) => replyOf(call(P('browser/session'), { action: 'open', url: text.match(/https?:\/\/\S+/)?.[0] })),
-  'evolve-create': ({ text, organism }) => replyOf(call(P('dev/act'), { message: text, organism, forceEvolve: true }, LONG)),
-  query: ({ text, organism }) => replyOf(call(P('dev/act'), { message: text, organism }, LONG)),
+  // dev/act zwraca obiekt: reply dla człowieka + result dla --format json|yaml|csv
+  'evolve-create': ({ text, organism }) => call(P('dev/act'), { message: text, organism, forceEvolve: true }, LONG),
+  query: ({ text, organism }) => call(P('dev/act'), { message: text, organism }, LONG),
   organism: ({ text, organism }) => organismChat(text, organism)
 };
 
 // Organizm z własnym interfejsem <org>/chat; bez niego dev/act działa w kontekście tego organizmu
 function organismChat(text, organism) {
   const r = call(P(`${organism}/chat`), { message: text }, LONG);
-  return replyOf(r.errorType === 'NOT_FOUND' ? call(P('dev/act'), { message: text, organism }, LONG) : r);
+  return r.errorType === 'NOT_FOUND' ? call(P('dev/act'), { message: text, organism }, LONG) : r;
 }
 
 export function dispatch(intent) {

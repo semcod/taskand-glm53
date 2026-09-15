@@ -11,8 +11,32 @@ const ROOT = dirname(dirname(realpathSync(fileURLToPath(import.meta.url))));
 const REGISTRY = join(ROOT, 'generated/registry/core/taskand.dev/v1/bin.mjs');
 const GATEWAY = process.env.TASKAND_GATEWAY || 'http://127.0.0.1:8077';
 const argv = process.argv.slice(2);
-const asJson = argv.includes('--json');
-const [cmd, ...args] = argv.filter(a => a !== '--json');
+let formatMode = 'txt';
+const validFormats = ['json', 'yaml', 'yml', 'csv', 'txt', 'text', 'table'];
+const filteredArgv = [];
+for (let i = 0; i < argv.length; i++) {
+  const a = argv[i];
+  if (a === '--json') {
+    formatMode = 'json';
+  } else if (a.startsWith('--format=')) {
+    const fmt = a.slice(9).toLowerCase();
+    if (!validFormats.includes(fmt)) {
+      console.error(`Nieobsługiwany format: ${fmt}. Dostępne: json, yaml, csv, txt, table`);
+      process.exit(2);
+    }
+    formatMode = fmt;
+  } else if (a === '--format') {
+    const fmt = (argv[++i] || '').toLowerCase();
+    if (!validFormats.includes(fmt)) {
+      console.error(`Nieobsługiwany format: ${fmt || 'brak'}. Dostępne: json, yaml, csv, txt, table`);
+      process.exit(2);
+    }
+    formatMode = fmt;
+  } else {
+    filteredArgv.push(a);
+  }
+}
+const [cmd, ...args] = filteredArgv;
 
 function loadEnv() {
   const file = join(ROOT, '.env');
@@ -85,8 +109,96 @@ async function chat(organism, message) {
   return local('call', { uri: 'proc://taskand.dev/dev/chat/v1', input: { message, organism }, timeout_ms: 900000 });
 }
 
+function toYaml(obj, indent = 0) {
+  const pad = '  '.repeat(indent);
+  if (obj === null || obj === undefined) return 'null\n';
+  if (typeof obj === 'boolean' || typeof obj === 'number') return `${obj}\n`;
+  if (typeof obj === 'string') {
+    if (obj.includes('\n')) {
+      return `|\n${obj.split('\n').map(l => pad + '  ' + l).join('\n')}\n`;
+    }
+    if (/^[a-zA-Z0-9_./:-]+$/.test(obj) && !/^(true|false|null|yes|no)$/i.test(obj)) return `${obj}\n`;
+    return JSON.stringify(obj) + '\n';
+  }
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '[]\n';
+    return obj.map(item => {
+      if (item !== null && typeof item === 'object') {
+        const itemYaml = toYaml(item, indent + 1).trimStart();
+        return `${pad}- ${itemYaml}`;
+      }
+      return `${pad}- ${toYaml(item, 0)}`;
+    }).join('');
+  }
+  if (typeof obj === 'object') {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return '{}\n';
+    return keys.map(k => {
+      const val = obj[k];
+      if (val !== null && typeof val === 'object' && !(Array.isArray(val) && val.length === 0) && Object.keys(val).length > 0) {
+        return `${pad}${k}:\n${toYaml(val, indent + 1)}`;
+      }
+      return `${pad}${k}: ${toYaml(val, indent + 1).trimStart()}`;
+    }).join('');
+  }
+  return String(obj) + '\n';
+}
+
+function toCsv(obj) {
+  const escapeCsv = v => {
+    if (v === null || v === undefined) return '';
+    const str = Array.isArray(v) ? v.join(';') : typeof v === 'object' ? JSON.stringify(v) : String(v);
+    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  };
+
+  let rows = null;
+  if (Array.isArray(obj)) {
+    rows = obj;
+  } else if (obj && typeof obj === 'object') {
+    const arrayKeys = ['devices', 'projects', 'processes', 'peers', 'prescriptions', 'sensors', 'networks', 'interfaces', 'broken', 'report'];
+    for (const k of arrayKeys) {
+      if (Array.isArray(obj[k])) { rows = obj[k]; break; }
+      if (obj.data && Array.isArray(obj.data[k])) { rows = obj.data[k]; break; }
+      if (obj.result && Array.isArray(obj.result[k])) { rows = obj.result[k]; break; }
+    }
+  }
+
+  if (Array.isArray(rows) && rows.length > 0) {
+    if (typeof rows[0] === 'object' && rows[0] !== null) {
+      const headers = [...new Set(rows.flatMap(r => Object.keys(r)))];
+      const lines = [headers.join(',')];
+      for (const r of rows) {
+        lines.push(headers.map(h => escapeCsv(r[h])).join(','));
+      }
+      return lines.join('\n');
+    }
+    return ['value', ...rows.map(r => escapeCsv(r))].join('\n');
+  }
+
+  if (obj && typeof obj === 'object') {
+    const lines = ['key,value'];
+    for (const [k, v] of Object.entries(obj)) {
+      lines.push(`${escapeCsv(k)},${escapeCsv(v)}`);
+    }
+    return lines.join('\n');
+  }
+
+  return escapeCsv(obj);
+}
+
 const print = (out, human) => {
-  console.log(asJson || !human ? JSON.stringify(out, null, 2) : human(out));
+  if (formatMode === 'json') {
+    console.log(JSON.stringify(out, null, 2));
+  } else if (formatMode === 'yaml' || formatMode === 'yml') {
+    console.log(toYaml(out).trimEnd());
+  } else if (formatMode === 'csv') {
+    console.log(toCsv(out));
+  } else {
+    console.log(human ? human(out) : (out?.reply || JSON.stringify(out, null, 2)));
+  }
   process.exitCode = out?.ok === false ? 1 : 0;
 };
 
@@ -269,6 +381,7 @@ COMMANDS.health = COMMANDS.status;
 
 const HELP = `taskand — organizmy wywoływane przez rejestr (URI + JSON)
 
+  taskand "<zadanie>"              automatyczny routing przez wewnętrzny router i orkiestrator DAG
   taskand <organizm> "<zadanie>"   dev | doc | sec | hw | file | browser | admin | <dowolny powołany>
   taskand proc <uri> ['<json>']    bezpośrednie wywołanie procesu proc://
   taskand twin [run|create|status] [id]    lokalny bliźniak sieci i weryfikacja skanu URI
@@ -285,19 +398,43 @@ const HELP = `taskand — organizmy wywoływane przez rejestr (URI + JSON)
   taskand status                   diagnoza usług i rejestru
   taskand heal [--plan]            samonaprawa: recepty organizmów wg policy.healing, reszta dla człowieka
   taskand log [n]                  dziennik zdarzeń (CloudEvents)
-  --json                           surowa odpowiedź JSON
+  --format <format>                format wyjściowy: json, yaml, csv, txt, table (domyślnie txt)
+  --json                           skrót dla --format json
 
   occupy: operatorskie i jawne (nie autonomiczne). Domyślnie tylko plan; --run wymaga dostępu SSH.
     [--dir /opt/taskand] [--with-secrets] [--master http://ip:8077] [--token <token>] [--port 8077]`;
+
+const KNOWN_ORGANISMS = new Set([
+  'dev', 'admin', 'doctor', 'doc', 'hw', 'file', 'sec', 'vault', 'browser', 'twin', 'web', 'chat', 'alert'
+]);
+
+// Organizm wbudowany albo powołany później (ma procesy w rejestrze); inne pierwsze słowo należy do zadania
+async function isOrganism(name) {
+  if (KNOWN_ORGANISMS.has(name)) return true;
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) return false;
+  const listed = await reg('list', { organism: name });
+  return Array.isArray(listed?.processes) && listed.processes.length > 0;
+}
 
 if (!cmd || cmd === 'help' || cmd === '--help') {
   console.log(HELP);
 } else if (COMMANDS[cmd]) {
   await COMMANDS[cmd](args);
-} else if (/^[a-z0-9][a-z0-9-]*$/.test(cmd)) {
+} else if (await isOrganism(cmd)) {
+  // Jawne skierowanie do konkretnego organizmu
   const out = await chat(cmd, args.join(' ') || 'status');
   print(out, o => o.reply || `✗ ${o.error}`);
 } else {
-  console.log(HELP);
-  process.exitCode = 2;
+  // Uniwersalny punkt wejścia: router wewnętrzny (dev/chat) automatycznie trasuje intencję
+  // do właściwego organizmu lub uruchamia orkiestrator (composite: planner -> validator -> orchestrator)
+  const fullMessage = (cmd === 'run' || cmd === 'do' || cmd === 'ask' || cmd === 'task')
+    ? args.join(' ')
+    : [cmd, ...args].join(' ');
+  if (!fullMessage.trim()) {
+    console.log(HELP);
+    process.exitCode = 2;
+  } else {
+    const out = await chat('', fullMessage);
+    print(out, o => o.reply || `✗ ${o.error}`);
+  }
 }

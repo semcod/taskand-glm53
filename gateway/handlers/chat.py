@@ -17,9 +17,13 @@ def handle_chat(request_handler, body: dict) -> None:
     organism = str(body.get("organism", "")).strip().lower()
     log_event("gateway.chat", {"user": user["name"], "organism": organism})
     result = call_process(DEV_CHAT, {"message": message, "organism": organism})
-    request_handler._send(status_for(result), {
+    response = {
         "ok": result.get("ok", False),
         "organism": result.get("organism", organism),
         "intent": result.get("intent"),
         "reply": result.get("reply") or result.get("error"),
-    })
+    }
+    for key in ("devices", "topology", "networks", "result", "data", "summary", "twinId", "projects"):
+        if key in result and result[key] is not None:
+            response[key] = result[key]
+    request_handler._send(status_for(result), response)

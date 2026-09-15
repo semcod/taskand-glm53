@@ -1,0 +1,149 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-024",
+  "summary": "Universal CLI routing, diacritics-safe intents and GitHub project discovery",
+  "workstream": "integration",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-024/**",
+    ".governance/manifest.json",
+    "Makefile",
+    "bin/taskand",
+    "gateway/handlers/chat.py",
+    "genome.yaml",
+    "generated/admin/chat/taskand.dev/v1/bin.mjs",
+    "generated/admin/github-projects-discovery/taskand.dev/v2/**",
+    "generated/admin/registry.json",
+    "generated/dev/act/taskand.dev/v1/bin.mjs",
+    "generated/dev/chat/taskand.dev/v1/bin.mjs",
+    "generated/dev/chat/taskand.dev/v1/dispatch.mjs",
+    "generated/dev/chat/taskand.dev/v1/intent.mjs",
+    "generated/dev/registry.json",
+    "tests/cli_routing.test.mjs"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [
+    "ticket-025"
+  ],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "cc4e150a7d6090f3d1fef336985a9ea3199c4011",
+    "targetBranch": "main",
+    "outcome": "taskand \"<zadanie>\" routes without naming an organism, intents match with or without Polish diacritics, GitHub repositories are listed by a bounded builtin package, and structured results reach --format json|yaml|csv without pipe truncation.",
+    "nonGoals": [
+      "Twin topology filter for ephemeral container interfaces (separate dependent slice)",
+      "Monag panel routes, capsule packaging standard, Planfile sync workflow and Gitea infrastructure left in the primary checkout",
+      "Redeploying the running gateway stage or mounting host repositories into the container",
+      "Changing the write-then-exit pattern in processes outside the chat path"
+    ],
+    "complexity": "L",
+    "estimatedMinutes": 120,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 5,
+      "maxPublicInterfaceChanges": 2,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Keep routing in dev/chat intents and dev/act deterministic selection; add GitHub discovery as an immutable builtin package resolved through the registry; pass structured results through existing chat responses instead of a new endpoint.",
+      "components": [
+        {
+          "name": "cli-gateway",
+          "paths": [
+            "bin/taskand",
+            "gateway/handlers/chat.py"
+          ]
+        },
+        {
+          "name": "dev-router",
+          "paths": [
+            "generated/dev/**"
+          ]
+        },
+        {
+          "name": "admin-discovery",
+          "paths": [
+            "generated/admin/**",
+            "genome.yaml"
+          ]
+        },
+        {
+          "name": "tests",
+          "paths": [
+            "tests/cli_routing.test.mjs",
+            "Makefile"
+          ]
+        },
+        {
+          "name": "governance",
+          "paths": [
+            ".governance/manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "CLI: taskand \"<zadanie>\" universal routing and --format json|yaml|csv|txt|table",
+        "POST /api/chat forwards structured result fields (result, devices, projects, summary)"
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket commit; registry entries return to the previous bindingHash and github-projects-discovery/v2 disappears with its genome line."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "node --test tests/cli_routing.test.mjs"
+        ],
+        "evidence": "Intent diacritics, capture and word-boundary cases"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "node --test tests/cli_routing.test.mjs"
+        ],
+        "evidence": "Discovery fixtures: origins, linked worktree, depth, credentials, invalid input"
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "node --test tests/cli_routing.test.mjs"
+        ],
+        "evidence": "700-repository CLI query through dev/chat and dev/act in json and csv"
+      },
+      {
+        "criterion": "AC-04",
+        "commands": [
+          "node bin/taskand verify"
+        ],
+        "evidence": "All active packages match bindingHash"
+      },
+      {
+        "criterion": "AC-05",
+        "commands": [
+          "make test",
+          "node tests/integration_test.mjs",
+          "venv/bin/python -m pytest -q tests/mesh_test.py tests/context_test.py",
+          "./project/governance-check.sh",
+          "git diff --check"
+        ],
+        "evidence": "Full local suites and managed governance gate"
+      }
+    ]
+  }
+}

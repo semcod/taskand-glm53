@@ -16,18 +16,17 @@ try {
 const message = String(input.message || input.prompt || '').trim();
 const organism = String(input.organism || 'dev').toLowerCase();
 const tag = `[${organism}]`;
-const done = out => {
-  process.stdout.write(JSON.stringify(out) + '\n');
-  process.exit(0);
-};
-if (!message) done({ ok: true, action: 'noop', reply: `${tag} Podaj zadanie w polu "message".` });
+// exit dopiero po opróżnieniu stdout — duże wyniki (np. setki repozytoriów) nie są obcinane na potoku
+const done = out => process.stdout.write(JSON.stringify(out) + '\n', () => process.exit(0));
 
 // Procesy infrastruktury nie są akcjami dla usera
 const INTERNAL = /\/(registry|dev|planner|validator|orchestrator)\//;
+// Normalizacja polskiej diakrytyki
+const stripDiacritics = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0142/g, 'l').replace(/\u0141/g, 'L');
 
-const decision = decide();
+const decision = message ? decide() : null;
 const handlers = { answer, call: () => run(decision.uri, decision.input), evolve };
-done((handlers[decision.action] || invalid)());
+done(message ? (handlers[decision.action] || invalid)() : { ok: true, action: 'noop', reply: `${tag} Podaj zadanie w polu "message".` });
 
 function capabilityContext() {
   const own = `proc://taskand.dev/${organism}/`;
@@ -37,10 +36,18 @@ function capabilityContext() {
 }
 
 function decide() {
+  const low = stripDiacritics(message).toLowerCase();
   // Known network tasks reuse a registered capability without asking an LLM to regenerate it.
-  if (!input.forceEvolve && /skan|scan|znajdź|znajdz|wykryj/.test(message.toLowerCase()) && /sie[cć]|network|\blan\b/.test(message.toLowerCase())) {
+  if (!input.forceEvolve && /skan|scan|znajdz|wykryj|lista|urzadze|pokaz/.test(low) && /siec|network|\blan\b/.test(low)) {
     const selected = registry('select', { organism: 'twin', capability: 'environment' });
     return selected.ok ? { action: 'call', uri: selected.uri, input: { action: 'run', scan: { scope: 'lan' } } }
+      : { action: 'unavailable', error: selected.error };
+  }
+
+  // Known GitHub project listing tasks
+  if (!input.forceEvolve && /projekt|repo/.test(low) && /\bgit(hub)?\b/.test(low)) {
+    const selected = registry('select', { organism: 'admin', capability: 'github-projects-discovery' });
+    return selected.ok ? { action: 'call', uri: selected.uri, input: {} }
       : { action: 'unavailable', error: selected.error };
   }
   const r = call('proc://taskand.dev/dev/llm/v1', {
@@ -97,9 +104,82 @@ function invalid() {
   return { ok: false, action: 'none', reply: `${tag} ✗ Nie mogę zaplanować akcji (${why}). Zadanie nie zostało wykonane.` };
 }
 
+function formatDevices(devices, summary, twinId) {
+  if (!Array.isArray(devices) || !devices.length) return summary || '';
+  const isVirtual = dev => /^(br-|docker|cni|veth|flannel|virbr|dummy)/i.test(dev.interface || '');
+  const isIpv4 = ip => /^\d+\.\d+\.\d+\.\d+$/.test(ip || '');
+
+  const lanDevices = devices.filter(d => !isVirtual(d));
+  const virtualDevices = devices.filter(d => isVirtual(d));
+
+  const lanIpv4 = lanDevices.filter(d => isIpv4(d.ip));
+  const lanIpv6 = lanDevices.filter(d => !isIpv4(d.ip));
+
+  const ipNum = ip => ip.split('.').reduce((acc, oct) => (acc << 8) + parseInt(oct, 10), 0) >>> 0;
+  lanIpv4.sort((a, b) => ipNum(a.ip) - ipNum(b.ip));
+
+  const lines = [];
+  lines.push(`Lista urządzeń w sieci LAN (${lanIpv4.length} IPv4, ${lanIpv6.length} IPv6, ${devices.length} łącznie):\n`);
+  lines.push('  IP               MAC                INTERFEJS  SZCZEGÓŁY');
+  lines.push('  ──────────────────────────────────────────────────────────────────────────');
+
+  for (const dev of lanIpv4) {
+    const ip = (dev.ip || '-').padEnd(16);
+    const mac = (dev.mac || '-').padEnd(18);
+    const iface = (dev.interface || '-').padEnd(10);
+    const host = dev.hostname ? `[${dev.hostname}] ` : '';
+    const src = (dev.sources || []).join(', ');
+    lines.push(`  ${ip} ${mac} ${iface} ${host}${src}`);
+  }
+
+  if (lanIpv6.length > 0) {
+    lines.push('');
+    lines.push(`  Adresy IPv6 (LAN): ${lanIpv6.map(d => d.ip).join(', ')}`);
+  }
+
+  if (virtualDevices.length > 0) {
+    const vIpv4 = virtualDevices.filter(d => isIpv4(d.ip));
+    const bridges = new Set(virtualDevices.map(d => d.interface)).size;
+    lines.push('');
+    lines.push(`  [Węzły wirtualne / Docker]: ${vIpv4.length} adresów IPv4 w ${bridges} mostach sieciowych.`);
+  }
+
+  if (twinId) {
+    lines.push(`  [Digital Twin]: ${twinId} (weryfikacja adresacji 1:1 ✓)`);
+  }
+
+  return lines.join('\n');
+}
+
+
+function formatProjects(projects) {
+  if (!Array.isArray(projects) || !projects.length) return null;
+  const byAccount = {};
+  for (const p of projects) {
+    (byAccount[p.account] = byAccount[p.account] || []).push(p);
+  }
+  const lines = [`Znaleziono ${projects.length} repozytoriów GitHub w ${Object.keys(byAccount).length} kontach:\n`];
+  for (const [account, repos] of Object.entries(byAccount).sort((a, b) => b[1].length - a[1].length)) {
+    lines.push(`  📁 ${account} (${repos.length}):`);
+    for (const r of repos.slice(0, 20)) {
+      const branch = r.branch ? ` [${r.branch}]` : '';
+      const date = r.lastCommit?.date ? ` (${r.lastCommit.date.split(' ')[0]})` : '';
+      lines.push(`     · ${r.repo}${branch}${date}`);
+    }
+    if (repos.length > 20) lines.push(`     … i ${repos.length - 20} więcej`);
+  }
+  return lines.join('\n');
+}
+
 function format(uri, result, evolved) {
   const head = evolved ? `${tag} ⚙ Brakowało zdolności — wyewoluowałem ${uri} (próby: ${evolved.attempts}, test kontraktu: PASS)\n` : '';
   if (result.ok === false) return `${head}${tag} ✗ ${uri}: ${result.error || 'błąd procesu'}`;
+  if (Array.isArray(result.projects) && result.projects.length > 0) {
+    return `${head}${tag} ${formatProjects(result.projects)}`;
+  }
+  if (Array.isArray(result.devices) && result.devices.length > 0) {
+    return `${head}${tag} ${formatDevices(result.devices, result.summary, result.id)}`;
+  }
   const summary = result.summary || result.reply || result.message;
   return `${head}${tag} ${summary || JSON.stringify(result, null, 2)}`;
 }

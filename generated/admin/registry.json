@@ -35,9 +35,11 @@
         "proc.yaml",
         "registry-client.mjs"
       ],
-      "hash": "sha256:6c4ac839bcd5efedaf826c7d3cc55eaa785e28fa00643c2f0d5d7f463b87b3d7",
+      "hash": "sha256:d6f7b724d1715739ec188d9afff7403f9c44d23ca1ebc1494e7f9f29f84bd2ed",
       "status": "active",
-      "registered": "2026-09-12T19:09:54.867Z"
+      "registered": "2026-09-12T19:09:54.867Z",
+      "capability": "Interfejs konwersacyjny organizmu admin (deleguje do dev/act)",
+      "refreshedAt": "2026-09-15T17:29:05.240Z"
     },
     "proc://taskand.dev/admin/network-device-discovery/v2": {
       "uri": "proc://taskand.dev/admin/network-device-discovery/v2",
@@ -93,8 +95,9 @@
         "test.mjs"
       ],
       "hash": "sha256:8de90487775c5389ca5b8ff399b8fab213a7ca8860b7e07468ede59eeb0eea1f",
-      "status": "active",
-      "registered": "2026-09-13T05:52:00.890Z"
+      "status": "deprecated",
+      "registered": "2026-09-13T05:52:00.890Z",
+      "deprecatedAt": "2026-09-15T12:36:01.643Z"
     },
     "proc://taskand.dev/admin/network-device-discovery/v4": {
       "uri": "proc://taskand.dev/admin/network-device-discovery/v4",
@@ -115,7 +118,26 @@
       "hash": "sha256:b58e007e79ce26397b76ca5d9ea2713896c13b68e8f327976365fc1b3a9f5b59",
       "status": "active",
       "registered": "2026-09-13T07:02:41.315Z"
+    },
+    "proc://taskand.dev/admin/github-projects-discovery/v2": {
+      "uri": "proc://taskand.dev/admin/github-projects-discovery/v2",
+      "organism": "admin",
+      "path": "generated/admin/github-projects-discovery/taskand.dev/v2",
+      "desc": "Wyszukuje lokalne repozytoria Git z origin na GitHub w searchRoots (ścieżki bezwzględne; domyślnie ~/github, ~/projects, ~/repos, ~/src) do maxDepth 0..6 (domyślnie 3). Zwraca ścieżki, URL-e bez poświadczeń, konta, gałęzie i ostatnie commity.",
+      "capability": "github-projects-discovery",
+      "kind": "task",
+      "origin": "builtin",
+      "env": [],
+      "credentials": [],
+      "files": [
+        "bin.mjs",
+        "proc.yaml"
+      ],
+      "hash": "sha256:c756f0af3fc42fe1c2f7f1613ad3eec9ac8ed3aa85a43ceb13b012299cffb0db",
+      "status": "active",
+      "registered": "2026-09-15T14:41:21.012Z",
+      "refreshedAt": "2026-09-15T17:24:41.404Z"
     }
   },
-  "updated": "2026-09-13T07:02:41.317Z"
+  "updated": "2026-09-15T17:29:05.240Z"
 }

@@ -1,0 +1,6 @@
+uri: proc://taskand.dev/admin/github-projects-discovery/v2
+organism: admin
+kind: task
+origin: builtin
+desc: "Wyszukuje lokalne repozytoria Git z origin na GitHub w searchRoots (ścieżki bezwzględne; domyślnie ~/github, ~/projects, ~/repos, ~/src) do maxDepth 0..6 (domyślnie 3). Zwraca ścieżki, URL-e bez poświadczeń, konta, gałęzie i ostatnie commity."
+capability: "github-projects-discovery"

@@ -16,6 +16,7 @@ organisms:
       - { uri: proc://taskand.dev/admin/network-device-discovery/v2, desc: "Pakiet wykrywa urządzenia w sieciach lokalnych przez tabelę ARP, sondy mDNS/SSDP, skan TCP wybranych portów, reverse DNS i bazę OUI, pomijając sieci dockerowe." }
       - { uri: proc://taskand.dev/admin/network-device-discovery/v3, desc: "Pakiet skanuje sieć lokalną (ARP, ping sweep, mDNS/SSDP, reverse DNS) i zwraca wykryte urządzenia z IP, MAC, nazwą hosta i producentem OUI, z odpornym scalaniem wyników (brak regresji)." }
       - { uri: proc://taskand.dev/admin/network-device-discovery/v4, desc: "Inwentaryzacja wszystkich interfejsów, podsieci i zakresów IPv4/IPv6; ograniczony skan LAN przez nmap. mode: inventory|scan, scope: lan|all. Bez parametrów: instrukcja." }
+      - { uri: proc://taskand.dev/admin/github-projects-discovery/v2, desc: "Wyszukuje lokalne repozytoria Git z origin na GitHub w searchRoots (ścieżki bezwzględne; domyślnie ~/github, ~/projects, ~/repos, ~/src) do maxDepth 0..6 (domyślnie 3). Zwraca ścieżki, URL-e bez poświadczeń, konta, gałęzie i ostatnie commity." }
 
   - name: alert
     processes:

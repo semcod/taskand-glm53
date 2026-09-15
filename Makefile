@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 # taskand v2.0 Makefile — Minimalny, auto-mnożący się system
-.PHONY: all up down status test conformance test-contracts test-negative test-twin test-web-twin twin-example web-twin-example integration catalog gateway bootstrap clean
+.PHONY: all up down status test conformance test-contracts test-negative test-twin test-web-twin test-cli twin-example web-twin-example integration catalog gateway bootstrap clean
 
 all: test
 
@@ -14,7 +14,10 @@ status:
 	docker compose ps
 	@./bin/taskand status
 
-test: conformance test-contracts test-negative test-twin test-web-twin
+test: conformance test-contracts test-negative test-twin test-web-twin test-cli
+
+test-cli:
+	@node --test tests/cli_routing.test.mjs
 
 test-web-twin:
 	@node --test tests/web_twin.test.mjs
