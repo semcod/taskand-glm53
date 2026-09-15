@@ -26,3 +26,8 @@ node_modules/
 /.subactor/receipts/
 /.subactor/cache/
 /.subactor/snapshots/
+
+# Machine-local Planfile and Koru tool state (ticket-023)
+/.planfile/
+/.planfile_analysis/
+/.koru/
