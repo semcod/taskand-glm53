@@ -1,0 +1,136 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-029",
+  "summary": "Unified MCP control through Taskand process URIs",
+  "workstream": "integration",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-029/**",
+    "packages/taskand-mcp-control/**",
+    "generated/mcp/**",
+    "gateway/handlers/proc.py",
+    "gateway/__init__.py",
+    "gateway/handlers/mcp_control.py",
+    "index.html",
+    "tests/mcp_control_test.py",
+    "tests/fixtures/mcp_control_server.py",
+    "docs/information/mcp-process-control.md",
+    "docs/README.md",
+    ".governance/manifest.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8804583ef82342ad7870659cf79e9ad8278e2369",
+    "targetBranch": "main",
+    "outcome": "Deploy a local unified Taskand interface controlling registered MCP instances and tool execution through a signed, authorized process URI, with durable receipts and real SDK verification. User-authorized PLF-008 continuation: conversation-first dashboard, header navigation and truthful monag counters.",
+    "nonGoals": [
+      "Replacing the active Premesh checkout or other Taskand runtime",
+      "Universal autonomous task solving",
+      "Temporal migration",
+      "Remote service credentials or unsolicited external mutations"
+    ],
+    "complexity": "L",
+    "estimatedMinutes": 120,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 5,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 2
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "One mcp/control URI backed by official SDK and persistent SQLite state. Existing authenticated process route signs actor-scoped envelopes; CLI process rejects unsigned execution. Trusted deployment profiles select executable/endpoint; UI registers instances, discovers and admits exact tool schema, executes with durable run ID, reads receipts. MCP sessions are bounded per operation and closed afterwards. Declare exact new MCP component paths in the target-owned integration registry before admission/publication; keep all pre-existing component ownership unchanged. Initial governance validation identified missing ownership declarations, and no source delivery has been admitted. Following explicit ticket030 handoff, reuse this unified dashboard scope for conversation-only requests through a trusted loopback LLM gateway, bounded in-memory browser history, top navigation and schema-aware monag rendering. No autonomous tool calls from conversation. Ticket030 source is preserved in an exact stash/checkpoint pending shared-path integration.",
+      "components": [
+        {
+          "name": "mcp-runtime",
+          "paths": [
+            "packages/taskand-mcp-control/**",
+            "generated/mcp/**"
+          ]
+        },
+        {
+          "name": "gateway-ui",
+          "paths": [
+            "gateway/handlers/proc.py",
+            "gateway/handlers/mcp_control.py",
+            "gateway/__init__.py",
+            "index.html"
+          ]
+        },
+        {
+          "name": "verification",
+          "paths": [
+            "tests/mcp_control_test.py",
+            "tests/fixtures/mcp_control_server.py"
+          ]
+        },
+        {
+          "name": "documentation",
+          "paths": [
+            "docs/information/mcp-process-control.md",
+            "docs/README.md"
+          ]
+        },
+        {
+          "name": "mcp-ownership",
+          "paths": [
+            ".governance/manifest.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "mcp/control process URI",
+        "MCP section in existing dashboard",
+        "Conversation-only /api/conversation endpoint"
+      ],
+      "dataChanges": [
+        "Private scoped MCP instance/tool registry and immutable execution receipts in SQLite"
+      ],
+      "ui": {
+        "impact": "multi-state",
+        "states": [
+          "loading",
+          "empty",
+          "error",
+          "success"
+        ],
+        "evidence": [
+          "Real browser and SDK integration probes"
+        ]
+      },
+      "rollback": "Stop only the separately deployed pilot unit and remove its dashboard link; preserve receipt database and other services."
+    },
+    "runtimeDependencies": [
+      "mcp==2.2.0",
+      "jsonschema==4.26.0"
+    ],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "uv run --project packages/taskand-mcp-control python tests/mcp_control_test.py"
+        ],
+        "evidence": "Real stdio/HTTP SDK tools, scoped config and permission checks, schema drift, duplicate and unknown execution tests"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "./project/governance-check.sh",
+          "make test"
+        ],
+        "evidence": "Repository and managed validation plus browser pilot"
+      }
+    ]
+  }
+}

@@ -155,7 +155,13 @@
           "events/**",
           "error/**",
           "models/**",
-          "proto/**"
+          "proto/**",
+          "gateway/handlers/proc.py",
+          "gateway/handlers/mcp_control.py",
+          "generated/mcp/**",
+          "packages/taskand-mcp-control/**",
+          "tests/mcp_control_test.py",
+          "tests/fixtures/mcp_control_server.py"
         ]
       },
       "interfaces": {

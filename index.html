@@ -15,10 +15,22 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;f
 table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;padding:8px;border-bottom:1px solid #385064}caption{text-align:left;margin:12px 0}
 @media(max-width:760px){main{grid-template-columns:1fr}}
 @media(max-width:760px){.visuals{grid-template-columns:1fr}}
+
+[hidden]{display:none!important}.topbar{position:sticky;top:0;z-index:10;background:#101820f5;padding:10px 0;border-bottom:1px solid #385064}.topbar nav{display:flex;flex-wrap:wrap;gap:8px}.topbar a{padding:10px 14px;text-decoration:none;border-radius:6px}.topbar a[aria-current=page]{background:#245b57;color:white}.access{margin:12px 0}.access input{max-width:420px}.chat-message{padding:12px 16px;margin:12px 0;border-radius:10px;background:#182633;white-space:pre-wrap;overflow-wrap:anywhere}.chat-message[data-role=user]{border-left:3px solid #91d6ce}.chat-message[data-role=assistant]{border-left:3px solid #a1cce9}#conversationLog{max-height:55vh;overflow:auto;min-height:140px}.chat-actions{display:flex;gap:8px;flex-wrap:wrap}
 </style></head><body>
 <h1>taskand. <small>kontekst · bliźniaki · live</small></h1>
-<p class="muted">Plan jest propozycją, model jest przybliżeniem, a odpowiedź HTTP nie dowodzi wykonania zadania.</p>
-<main><section class="wide">
+<header class="topbar"><nav aria-label="Główne menu">
+<a href="#rozmowa" data-view="rozmowa">Rozmowa</a><a href="#uslugi" data-view="uslugi">Usługi</a><a href="#wykonania" data-view="wykonania">Wykonania</a><a href="#telemetria" data-view="telemetria">Telemetria</a><a href="#diagnostyka" data-view="diagnostyka">Diagnostyka</a>
+</nav></header><div id="access" class="access"><label for="token">Token API (tylko w pamięci tej strony)</label><input id="token" type="password" autocomplete="off">
+<button id="logout">Wyloguj lokalnie</button><small>Usuwa token i widoczne dane z tej strony; nie unieważnia tokenu na serwerze ani nie cofa wysłanej operacji.</small>
+<p id="authStatus" role="status">Podaj token dostępu do Taskand, nie klucz dostawcy LLM.</p>
+</div>
+<main><section class="wide" id="conversation" data-panel="rozmowa">
+<h2>Rozmowa</h2><p>Omawiaj zadania, pytaj i dopracowuj plan. W tym trybie model nie uruchamia narzędzi. Historia pozostaje w pamięci tej strony.</p>
+<div id="conversationLog" role="log" aria-live="polite"><p class="muted">Rozpocznij rozmowę.</p></div>
+<label for="conversationInput">Wiadomość</label><textarea id="conversationInput" rows="4" maxlength="12000" placeholder="Jak mogę przygotować raport lub zadanie developerskie?"></textarea>
+<div class="chat-actions"><button id="conversationSend">Wyślij wiadomość</button><button id="conversationPlan">Przenieś do planowania</button><button id="conversationClear">Nowa rozmowa</button></div><p id="conversationStatus" role="status">Gotowy do rozmowy.</p>
+</section><section class="wide" data-panel="telemetria">
 <h2>Sieć instancji i rejestr procesów</h2>
 <p>Widok tylko do odczytu. Peer wpisany do konfiguracji nie oznacza wykrytej, zaufanej ani dostępnej maszyny.</p>
 <button id="meshRefresh">Odczytaj stan</button><label><input id="meshLive" type="checkbox"> Odświeżaj co 5 sekund (gdy karta jest widoczna)</label>
@@ -28,19 +40,16 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
 <p class="muted">Pełny kontur radaru pojawia się tylko przy komplecie pomiarów. Brak pomiaru = „nieznane”, nie 0%. Hash w rejestrze jest deklaracją, nie dowodem integralności.</p>
 <table><caption>Wartości i pokrycie pomiarów</caption><thead><tr><th>Parametr</th><th>Wynik</th><th>Podstawa</th></tr></thead><tbody id="metricRows"></tbody></table>
 <details><summary>Węzły i relacje (wersjonowany JSON)</summary><pre id="meshDetails">Brak obserwacji.</pre></details>
-</section><section>
-<h2>Nowe żądanie</h2>
-<label for="token">Token API (tylko w pamięci tej strony)</label><input id="token" type="password" autocomplete="off">
-<button id="logout">Wyloguj lokalnie</button><small>Usuwa token i widoczne dane z tej strony; nie unieważnia tokenu na serwerze ani nie cofa wysłanej operacji.</small>
-<p id="authStatus" role="status">Podaj token dostępu do Taskand, nie klucz dostawcy LLM.</p>
-<label for="mode">Tryb</label><select id="mode"><option value="compile">DSL bez LLM i bez wykonania</option><option value="plan">Propozycja planisty — bez wykonania</option><option value="chat">Rozmowa — istniejący dispatcher taskand</option></select>
+</section><section data-panel="wykonania">
+<h2>Planowanie i polecenia</h2>
+<label for="mode">Tryb</label><select id="mode"><option value="compile">DSL bez LLM i bez wykonania</option><option value="plan">Propozycja planisty — bez wykonania</option><option value="chat">Wykonanie polecenia — dispatcher taskand</option></select>
 <label for="msg">Prompt</label><textarea id="msg" rows="5" placeholder="Opisz zadanie i kryteria sprawdzenia"></textarea>
 <label><input id="retain" type="checkbox"> Zapisz również zredagowaną treść promptu</label>
 <small>Domyślnie zapisujemy identyfikatory, relacje i HMAC, bez treści. Redakcja nie wykrywa wszystkich sekretów — nie wpisuj ich do promptów.</small>
 <label for="refs">Istniejące URN kontekstu (po jednym w wierszu)</label><textarea id="refs" rows="2"></textarea>
 <button id="send">Wyślij</button>
 <pre id="out" aria-live="polite">Brak odpowiedzi.</pre>
-</section><section>
+</section><section data-panel="diagnostyka">
 <h2>Jawne profile testowe użytkowników</h2>
 <p class="muted">To syntetyczne scenariusze zachowania aplikacji, nie kopie osobowości ani uprawnień ludzi.</p>
 <label for="label">Nazwa profilu</label><input id="label" placeholder="Użytkownik sprawdzający stan">
@@ -52,25 +61,25 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
 <label for="profiles">Wersja do symulacji</label><select id="profiles"><option value="">Brak załadowanych profili</option></select>
 <button id="simulate">Generuj i sprawdź DSL testów</button>
 <pre id="profileOut">Symulacja kompiluje prompty i sprawdza referencje. Nie wykonuje operacji produkcyjnych.</pre>
-</section><section class="wide">
+</section><section class="wide" data-panel="wykonania">
 <h2>Stan bieżącego żądania</h2><p id="state" role="status">Brak aktywnego żądania</p><small id="request"></small>
 <div id="graph" aria-label="Graf obserwowanych zdarzeń żądania"></div>
 <p class="muted">Pokrycie: granice gateway → proces. Brak zdarzenia wewnętrznego oznacza brak obserwacji, nie sukces. Strzałki oznaczają kolejność obserwacji.</p>
 <details><summary>Zdarzenia i referencje</summary><pre id="events">[]</pre></details>
-</section><section class="wide">
+</section><section class="wide" data-panel="diagnostyka">
 <h2>Pilotaż obserwatorów: plan → bliźniak → decyzja człowieka</h2>
 <p>Trzy adaptery normalizacji: Taskand/Git/testy, CLI/IDE i przeglądarka. Test obejmuje wyłącznie syntetyczne pliki zdarzeń — nie prawdziwe sesje, urządzenia ani działające rozszerzenie przeglądarki.</p>
 <button id="observerPilot">Zaplanuj i przetestuj trzy źródła w bliźniaku danych</button>
 <button id="observerNext" disabled>Przygotuj pytanie o następny etap</button>
 <pre id="observerOut" aria-live="polite">Obserwatory rzeczywistych danych są wyłączone. Kolejny etap wymaga wskazania źródeł, zakresu, retencji i czasu pracy oraz osobnego testu adapterów live.</pre>
 <p class="muted">Wynik symulacji nie jest zgodą. Nie zbieramy haseł, schowka, klawiszy ani historii istniejących sesji. Nie synchronizujemy profilu człowieka między urządzeniami bez potwierdzonego powiązania tożsamości.</p>
-</section><section class="wide" id="monagSection">
+</section><section class="wide" id="monagSection" data-panel="telemetria">
 <h2>Telemetria monag live i aktywność maszynowa (Workspace ~/github)</h2>
-<p>Nadzór nad agentami LLM, procesami deweloperskimi i zaległościami w worktree. Automatyczne rekomendacje i powiadomienia (Desktop + Web).</p>
+<p>Odczyt projektów, worktree i ticketów z monag. Powiadomienia są opcjonalne i dotyczą wyniku tego odczytu.</p>
 <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
   <button id="monagRefreshBtn">Odśwież stan agentów i worktree</button>
-  <label><input id="notifyDesktopCheck" type="checkbox" checked> Powiadomienia pulpitowe (notify-send)</label>
-  <label><input id="notifyWebCheck" type="checkbox" checked> Powiadomienia w panelu (Web)</label>
+  <label><input id="notifyDesktopCheck" type="checkbox"> Powiadomienia pulpitowe (notify-send)</label>
+  <label><input id="notifyWebCheck" type="checkbox"> Powiadomienia w panelu (Web)</label>
 </div>
 <div id="monagSummary" style="padding:10px;background:#182633;border-radius:6px;margin-bottom:12px">
   Brak danych. Kliknij „Odśwież stan agentów i worktree”.
@@ -78,10 +87,30 @@ table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;
 <details><summary>Szczegóły projektów i worktree do wznowienia (monag resume)</summary>
   <pre id="monagResumeOut">Kliknij „Odśwież”, aby pobrać aktualny rejestr.</pre>
 </details>
+</section><section class="wide" id="mcpControl" data-panel="uslugi">
+<h2>Serwery MCP i wykonania</h2>
+<p>Wszystkie operacje korzystają z procesu <code>proc://taskand.dev/mcp/control/v1</code> i bieżącego konta API. Połączenie MCP jest otwierane na czas operacji, a następnie zamykane.</p>
+<button id="mcpRefresh">Odczytaj konfigurację</button>
+<label for="mcpProfile">Profil wdrożony na tym hoście</label><select id="mcpProfile"></select>
+<label for="mcpNewId">Identyfikator nowej instancji</label><input id="mcpNewId" placeholder="np. raporty">
+<button id="mcpRegister">Dodaj instancję</button>
+<label for="mcpServer">Instancja</label><select id="mcpServer"></select>
+<button id="mcpToggle">Włącz / wyłącz nowe operacje</button>
+<button id="mcpProfileApply">Zastosuj wybrany profil — wymaga ponownego dopuszczenia narzędzi</button>
+<button id="mcpDiscover">Odczytaj narzędzia</button>
+<label for="mcpTool">Narzędzie</label><select id="mcpTool"></select>
+<pre id="mcpSchema">Najpierw odczytaj narzędzia wybranej instancji.</pre>
+<button id="mcpAdmit">Dopuść tę wersję narzędzia</button>
+<label for="mcpArguments">Argumenty JSON</label><textarea id="mcpArguments" rows="4">{}</textarea>
+<button id="mcpExecute">Wykonaj operację</button>
+<label for="mcpRunId">Identyfikator wykonania — zachowaj go do odczytu po utracie połączenia</label><input id="mcpRunId" readonly>
+<button id="mcpRecover">Odczytaj wynik</button><button id="mcpRuns">Historia wykonań</button>
+<p id="mcpStatus" role="status">Brak obserwacji.</p>
+<pre id="mcpOut">Wynik narzędzia nie jest jeszcze niezależnym potwierdzeniem ukończenia zadania.</pre>
 </section></main>
 <script>
 const $ = id => document.getElementById(id);
-const api = location.protocol + '//' + location.hostname + ':8077';
+const api = location.port === '8090' ? location.protocol + '//' + location.hostname + ':8077' : location.origin;
 const lines = id => $(id).value.split('\n').map(x => x.trim()).filter(Boolean);
 let sessionEpoch=0;
 let visibleRequestId=null;
@@ -266,10 +295,10 @@ function consumeDeveloperToken(){
   if(dev==='1'&&hadToken&&isLoopbackHost()&&scrubbed){
     $('token').value=raw;
     $('authStatus').textContent='Token developerski załadowany tylko w pamięci strony (loopback).';
-    return;
+    return true;
   }
   $('authStatus').textContent=hadToken
-    ? 'Parametr developerski odrzucony: wymagane taskand=1, loopback i jednorazowe użycie.'
+    ? 'Parametr developerski odrzucony: wymagane taskand_dev=1, loopback i jednorazowe użycie.'
     : 'Parametr developerski bez tokenu został pominięty.';
 }
 
@@ -281,26 +310,23 @@ async function refreshMonag() {
   btn.disabled = true;
   sum.textContent = 'Pobieranie telemetrii monag...';
   try {
-    const res = await fetch(api + '/api/monag/resume');
-    const json = await res.json();
+    const json = await request('/api/monag/resume', undefined, 35000);
     if (json.ok && json.data) {
-      const d = json.data;
-      const projectsCount = d.projects ? Object.keys(d.projects).length : (d.count || 'wiele');
-      const checkouts = d.checkouts || [];
-      const tickets = d.tickets || [];
-      sum.innerHTML = `<strong>Zbadane projekty:</strong> ${projectsCount} | <strong>Worktree do wznowienia:</strong> ${checkouts.length} | <strong>Tickety Planfile:</strong> ${tickets.length}`;
-      out.textContent = JSON.stringify(d, null, 2);
-
-      if (checkouts.length > 0 && $('notifyDesktopCheck') && $('notifyDesktopCheck').checked) {
-        fetch(api + '/api/notify', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            title: 'Taskand Monag Alert',
-            message: `Wykryto ${checkouts.length} worktree oczekujących na wznowienie lub walidację!`,
-            urgency: 'normal'
-          })
-        }).catch(()=>{});
+      const d = json.data, projects=Array.isArray(d.projects)?d.projects:[];
+      const sumField=(values)=>values.every(Number.isInteger)?values.reduce((a,b)=>a+b,0):null;
+      const checkouts=sumField(projects.map(p=>p.unfinished_checkouts));
+      const tickets=sumField(projects.map(p=>p.planfile?.available===true && p.planfile?.complete===true?p.planfile.remaining:null));
+      const known=projects.filter(p=>p.planfile?.available===true && p.planfile?.complete===true);
+      const knownTickets=known.reduce((n,p)=>n+(Number.isInteger(p.planfile.remaining)?p.planfile.remaining:0),0);
+      sum.textContent=`Zbadane projekty: ${d.project_count ?? projects.length} | Worktree do wznowienia: ${checkouts ?? 'brak pełnego pomiaru'} | Otwarte tickety Planfile: ${tickets ?? 'co najmniej '+knownTickets+' (pokrycie '+known.length+'/'+projects.length+')'}`;
+      out.textContent=JSON.stringify(d,null,2);
+      if(checkouts>0){
+        const message=`Worktree do wznowienia: ${checkouts}`;
+        if($('notifyDesktopCheck').checked)await request('/api/notify',{title:'Taskand · monag',message,urgency:'normal'});
+        if($('notifyWebCheck').checked && 'Notification' in window){
+          const permission=Notification.permission==='default'?await Notification.requestPermission():Notification.permission;
+          if(permission==='granted')new Notification('Taskand · monag',{body:message});
+        }
       }
     } else {
       sum.textContent = 'Błąd odczytu monag: ' + (json.error || json.stderr || 'nieznany');
@@ -314,6 +340,63 @@ async function refreshMonag() {
 if ($('monagRefreshBtn')) {
   $('monagRefreshBtn').onclick = refreshMonag;
 }
-consumeDeveloperToken();
+const developerSession=consumeDeveloperToken();
 
+
+const mcpUri='proc://taskand.dev/mcp/control/v1';
+let mcpServers=[],mcpTools=[],mcpBusy=false;
+function mcpClearTools(){mcpTools=[];$('mcpTool').replaceChildren();$('mcpSchema').textContent='Odczytaj narzędzia wybranej instancji.';}
+function mcpOptions(id,rows,label){const select=$(id);select.replaceChildren();for(const row of rows){const o=document.createElement('option');o.value=row.id||row.name;o.textContent=label(row);select.append(o);}}
+async function mcpAction(action,data={}){
+  const response=await request('/api/proc/call',{uri:mcpUri,data:{action,data}},45000);
+  const value=response.result;
+  if(!value)throw new Error('Brak wyniku procesu');
+  return value;
+}
+async function mcpGuard(work){
+  if(mcpBusy)return; mcpBusy=true;const epoch=sessionEpoch;
+  $('mcpStatus').textContent='Trwa operacja…';
+  try{const result=await work();if(currentSession(epoch)){$('mcpOut').textContent=JSON.stringify(result,null,2);$('mcpStatus').textContent=result.state|| (result.ok?'Odczytano wynik.':result.errorType||'Operacja odrzucona.');}}
+  catch(e){if(currentSession(epoch)){$('mcpStatus').textContent=e.message;$('mcpOut').textContent='Jeżeli wysłano wykonanie, użyj Odczytaj wynik. Nie ponawiamy go automatycznie.';}}
+  finally{mcpBusy=false;}
+}
+async function mcpReload(){const result=await mcpAction('list');if(result.ok){mcpServers=result.servers;mcpClearTools();mcpOptions('mcpServer',mcpServers,r=>r.id+(r.enabled?' · włączona':' · wyłączona'));mcpOptions('mcpProfile',result.profiles,r=>r.id+' · '+r.transport);}return result;}
+$('mcpRefresh').onclick=()=>mcpGuard(mcpReload);
+$('mcpRegister').onclick=()=>mcpGuard(async()=>{const result=await mcpAction('register',{server:$('mcpNewId').value,profile:$('mcpProfile').value});if(result.ok)await mcpReload();return result;});
+$('mcpToggle').onclick=()=>mcpGuard(async()=>{const server=mcpServers.find(s=>s.id===$('mcpServer').value);if(!server)throw new Error('Wybierz instancję');const result=await mcpAction('configure',{server:server.id,enabled:!server.enabled,revision:server.revision});if(result.ok)await mcpReload();return result;});
+$('mcpServer').onchange=mcpClearTools;
+$('mcpProfileApply').onclick=()=>mcpGuard(async()=>{const server=mcpServers.find(s=>s.id===$('mcpServer').value);if(!server)throw new Error('Wybierz instancję');const result=await mcpAction('configure',{server:server.id,enabled:!!server.enabled,revision:server.revision,profile:$('mcpProfile').value});if(result.ok)await mcpReload();return result;});
+function mcpShowTool(){const tool=mcpTools.find(t=>t.name===$('mcpTool').value);$('mcpSchema').textContent=tool?JSON.stringify({description:tool.description,inputSchema:tool.inputSchema,admitted:tool.admitted},null,2):'Brak narzędzia';}
+$('mcpTool').onchange=mcpShowTool;
+async function mcpDiscover(){const result=await mcpAction('discover',{server:$('mcpServer').value});mcpClearTools();if(result.ok){mcpTools=result.tools;mcpOptions('mcpTool',mcpTools,t=>t.name+(t.admitted?' · dopuszczone':' · wymaga dopuszczenia'));mcpShowTool();}return result;}
+$('mcpDiscover').onclick=()=>mcpGuard(mcpDiscover);
+function mcpSelection(){const tool=mcpTools.find(t=>t.name===$('mcpTool').value);if(!tool)throw new Error('Odczytaj i wybierz narzędzie');return {server:$('mcpServer').value,tool:tool.name,schemaPin:tool.schemaPin};}
+$('mcpAdmit').onclick=()=>mcpGuard(async()=>{const result=await mcpAction('admit',mcpSelection());if(result.ok)await mcpDiscover();return result;});
+$('mcpExecute').onclick=()=>mcpGuard(async()=>{const selected=mcpSelection(),args=JSON.parse($('mcpArguments').value);const runId=crypto.randomUUID();$('mcpRunId').value=runId;return mcpAction('call',{...selected,arguments:args,runId});});
+$('mcpRecover').onclick=()=>mcpGuard(()=>mcpAction('runs',{runId:$('mcpRunId').value}));
+$('mcpRuns').onclick=()=>mcpGuard(()=>mcpAction('runs'));
+$('token').addEventListener('input',()=>{mcpServers=[];mcpClearTools();$('mcpServer').replaceChildren();$('mcpProfile').replaceChildren();$('mcpRunId').value='';$('mcpOut').textContent='Konto zmienione. Odczytaj konfigurację.';});
+$('logout').addEventListener('click',()=>{mcpServers=[];mcpClearTools();$('mcpServer').replaceChildren();$('mcpProfile').replaceChildren();$('mcpRunId').value='';$('mcpOut').textContent='Wylogowano lokalnie.';});
+if(developerSession){refreshMesh();mcpGuard(mcpReload);}
+
+const views=new Set(['rozmowa','uslugi','wykonania','telemetria','diagnostyka']);
+function showView(){const requested=location.hash.slice(1);const view=views.has(requested)?requested:(requested==='mode'?'wykonania':'rozmowa');for(const section of document.querySelectorAll('[data-panel]'))section.hidden=section.dataset.panel!==view;for(const link of document.querySelectorAll('[data-view]')){if(link.dataset.view===view)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}}
+window.addEventListener('hashchange',showView);showView();
+let conversationMessages=[],conversationBusy=false;
+function addConversation(role,content){$('conversationLog').querySelector('.muted')?.remove();const message=document.createElement('div');message.className='chat-message';message.dataset.role=role;const title=document.createElement('strong');title.textContent=role==='user'?'Ty':'Asystent';const text=document.createElement('div');text.textContent=content;message.append(title,text);$('conversationLog').append(message);message.scrollIntoView({block:'nearest'});}
+function clearConversation(){conversationMessages=[];$('conversationLog').replaceChildren();$('conversationInput').value='';$('conversationStatus').textContent='Nowa rozmowa.';}
+$('token').addEventListener('input',clearConversation);$('logout').addEventListener('click',clearConversation);
+$('conversationClear').onclick=()=>{if(!conversationBusy)clearConversation();};
+$('conversationPlan').onclick=()=>{const text=$('conversationInput').value.trim()||conversationMessages.filter(m=>m.role==='user').at(-1)?.content;if(text){$('msg').value=text;$('mode').value='plan';location.hash='wykonania';}};
+$('conversationSend').onclick=async()=>{
+  const content=$('conversationInput').value.trim();if(!content||conversationBusy)return;
+  try{headers();}catch(e){$('conversationStatus').textContent=e.message;return;}
+  const epoch=sessionEpoch;conversationBusy=true;$('conversationSend').disabled=true;$('conversationClear').disabled=true;
+  const messages=[...conversationMessages.slice(-22),{role:'user',content}];
+  while(messages.length>1 && messages.reduce((n,m)=>n+m.content.length,0)>48000)messages.splice(0,2);
+  addConversation('user',content);$('conversationInput').value='';$('conversationStatus').textContent='Asystent odpowiada…';
+  try{const result=await request('/api/conversation',{messages},115000);if(currentSession(epoch)){if(!result.ok||typeof result.reply!=='string')throw new Error('Brak odpowiedzi modelu');conversationMessages=[...messages,{role:'assistant',content:result.reply}];addConversation('assistant',result.reply);$('conversationStatus').textContent='Odpowiedź gotowa. Nie wykonano narzędzi.';}}
+  catch(e){if(currentSession(epoch)){$('conversationStatus').textContent=e.message+' Wiadomość nie została dołączona do kontekstu.';$('conversationInput').value=content;}}
+  finally{conversationBusy=false;$('conversationSend').disabled=false;$('conversationClear').disabled=false;}
+};
 </script></body></html>

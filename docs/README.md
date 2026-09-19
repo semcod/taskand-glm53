@@ -45,3 +45,5 @@ standardu w CI i nie stanowi odbioru opisywanej funkcjonalności.
 - [Standard v2.2](standard-v2.2.md).
 - [Federacja](federation.md).
 - [Sekrety](SECRETS.md).
+
+- [Sterowanie MCP przez URI Taskand](information/mcp-process-control.md) — profile serwerów, dopuszczenia narzędzi, trwałe wyniki i izolowany pilot.

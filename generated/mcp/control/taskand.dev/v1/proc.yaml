@@ -1,0 +1,6 @@
+uri: proc://taskand.dev/mcp/control/v1
+organism: mcp
+kind: task
+origin: builtin
+desc: "Kontrola MCP: instancje, dopuszczenia narzędzi i trwałe wyniki"
+env: [TASKAND_MCP_PYTHON, TASKAND_MCP_KEY, TASKAND_MCP_STATE, TASKAND_MCP_PROFILES]

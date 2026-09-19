@@ -1,0 +1,27 @@
+{
+  "organism": "mcp",
+  "processes": {
+    "proc://taskand.dev/mcp/control/v1": {
+      "uri": "proc://taskand.dev/mcp/control/v1",
+      "organism": "mcp",
+      "kind": "task",
+      "origin": "builtin",
+      "desc": "Kontrola MCP: instancje, dopuszczenia narzędzi i trwałe wyniki",
+      "env": [
+        "TASKAND_MCP_PYTHON",
+        "TASKAND_MCP_KEY",
+        "TASKAND_MCP_STATE",
+        "TASKAND_MCP_PROFILES"
+      ],
+      "path": "generated/mcp/control/taskand.dev/v1",
+      "credentials": [],
+      "files": [
+        "bin.mjs",
+        "proc.yaml"
+      ],
+      "hash": "sha256:3c5c0aed1e573cb7bd02bc65f74ab41c771bc0802b1249e34a12661203cb322a",
+      "status": "candidate",
+      "registered": "2026-09-19T17:25:00Z"
+    }
+  }
+}

@@ -2,7 +2,9 @@ import os
 import sys
 import json
 import sqlite3
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlsplit
 from gateway.router import dispatch
 from gateway.auth import bind_address, is_loopback_bind
 from gateway.auth import check_auth
@@ -43,6 +45,16 @@ class GatewayHTTPHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:
+        if urlsplit(self.path).path in ('/', '/index.html'):
+            page = (Path(__file__).resolve().parent.parent / 'index.html').read_bytes()
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('Referrer-Policy', 'no-referrer')
+            self.send_header('Content-Length', str(len(page)))
+            self.end_headers()
+            self.wfile.write(page)
+            return
         try:
             dispatch('GET', self.path, self, {})
         except (OSError, sqlite3.Error):
@@ -78,7 +90,11 @@ class GatewayHTTPHandler(BaseHTTPRequestHandler):
             context = store.begin(user['name'], self.path, body, request_id, retain, refs)
             context['refs'] = refs
             token = ACTIVE.set(context)
-            dispatch('POST', self.path, self, body)
+            if self.path == '/api/conversation':
+                from gateway.handlers.proc import handle_conversation
+                handle_conversation(self, body)
+            else:
+                dispatch('POST', self.path, self, body)
         except ContextError as error:
             self._send(409, {'ok': False, 'error': str(error)})
         except (OSError, sqlite3.Error):
@@ -92,7 +108,10 @@ class GatewayHTTPHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         # Silence default stderr spam during normal testing
         if os.environ.get("TASKAND_DEBUG"):
-            super().log_message(format, *args)
+            # Developer bootstrap parameters must not enter access logs.
+            safe_args = tuple(arg.replace(self.path, self.path.split('?', 1)[0])
+                              if isinstance(arg, str) else arg for arg in args)
+            super().log_message(format, *safe_args)
 
 def main() -> None:
     port = int(os.environ.get("PORT", 8077))

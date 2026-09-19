@@ -1,0 +1,6 @@
+[project]
+name = "taskand-mcp-control"
+version = "0.1.0"
+description = "Actor-scoped MCP execution through Taskand process URIs"
+requires-python = ">=3.11"
+dependencies = ["mcp==2.2.0", "jsonschema==4.26.0"]
