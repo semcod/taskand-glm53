@@ -40,7 +40,7 @@ export function launchBrowser() {
   });
   const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
     if (closed) return reject(new Error(`Chromium niedostępny: ${errors}`));
-    const id = ++seq, timer = setTimeout(() => { pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, 12000);
+    const id = ++seq, timer = setTimeout(() => { pending.delete(id); reject(new Error(`CDP timeout: ${method}`)); }, 30000);
     pending.set(id, { resolve, reject, timer });
     child.stdio[3].write(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }) + '\0');
   });

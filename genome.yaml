@@ -92,8 +92,14 @@ organisms:
     processes:
       - { uri: proc://taskand.dev/twin/environment/v1, desc: "Tworzy cyfrowy bliźniak adresacji całej lokalnej infrastruktury z rejestru organizmów; uruchamia i weryfikuje skan URI w izolowanej sieci. action: run|create|status, taskId?, scan: {scope: lan}." }
       - { uri: proc://taskand.dev/twin/web/v1, desc: "Bliźniak stron i API przed implementacją: wybór browser/web-model z rejestru, publiczna migawka GET, scenariusz offline, bramka kompletności. action: run|capture, urls?, modelId?, steps?, mocks?." }
+      - { uri: proc://taskand.dev/twin/account/v1, desc: "Odczyt cyfrowego bliźniaka Subactor: organizacje, projekty, repozytoria, tickety, wdrożenia z kanonicznej projekcji Twin" }
+
+  - name: subactor
+    processes:
+      - { uri: proc://taskand.dev/subactor/ticket-lifecycle/v1, desc: "Weryfikacja i uzgadnianie cyklu życia ticketów zarządzanych (reconcile preflight) w standardzie wellmanifest/nl-api-llm" }
 
   - name: mcp
     processes:
       - { uri: proc://taskand.dev/mcp/shell-build/v1, desc: "Prepare NL plans, scripts and verified Paxlet packages without execution" }
       - { uri: proc://taskand.dev/mcp/shell-run/v1, desc: "Explicitly execute a reviewed Paxlet package by digest" }
+

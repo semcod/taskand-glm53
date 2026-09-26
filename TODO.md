@@ -1,6 +1,7 @@
 ## Governed documentation pilot
 
 - [ ] [ticket-014](project/ticket-014/README.md): compact evolution guides and stable legacy links; local validation, no remote publication.
+- [x] [ticket-058](project/ticket-058/README.md): Fix conformance genome and shell-build contract.
 
 <!-- PREFACT:BEGIN — generated block, edits inside will be overwritten -->
 # TODO
