@@ -1,0 +1,90 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-058",
+  "summary": "Fix conformance genome and shell-build contract",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-058/**",
+    "project/TICKETS.md",
+    "TODO.md",
+    "genome.yaml",
+    "generated/mcp/**",
+    "generated/browser/**"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "483d5fdb9db426f4a22f533c6730c99e0292491f",
+    "targetBranch": "main",
+    "outcome": "Fix conformance genome to include all active processes, allow empty input in shell-build contract test, and increase CDP timeout to prevent test flakiness.",
+    "nonGoals": [
+      "Modifying core registry semantics",
+      "Altering network-isolated execution sandbox"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 9,
+      "maxAffectedComponents": 3,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Synchronize genome.yaml with active processes (ticket-lifecycle and twin/account), default operation in shell-build to 'plan' when input is empty or omitted, and bump CDP send timeout to 30000ms.",
+      "components": [
+        {
+          "name": "genome conformance",
+          "paths": [
+            "genome.yaml"
+          ]
+        },
+        {
+          "name": "shell-build process contract",
+          "paths": [
+            "generated/mcp/shell-build/taskand.dev/v1/bin.mjs",
+            "generated/mcp/registry.json"
+          ]
+        },
+        {
+          "name": "browser cdp timeout",
+          "paths": [
+            "generated/browser/web-model/taskand.dev/v1/cdp.mjs",
+            "generated/browser/registry.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "git revert HEAD"
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "node tests/conformance.mjs",
+          "node tests/contract_tests.mjs",
+          "node tests/negative_tests.mjs"
+        ],
+        "evidence": "All conformance, contract and negative tests pass 100%"
+      }
+    ]
+  }
+}

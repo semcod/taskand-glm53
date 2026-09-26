@@ -12,7 +12,7 @@ try {
   if (raw.length > 262144) throw new Error('SHELL_REQUEST_TOO_LARGE');
   const input = JSON.parse(raw.toString('utf8'));
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('SHELL_OBJECT_REQUIRED');
-  const operation = prepare ? input.operation : 'run';
+  const operation = prepare ? (input.operation || 'plan') : 'run';
   if (!['plan', 'compile', 'export', 'verify'].includes(operation) || (!prepare && 'operation' in input)) throw new Error('SHELL_OPERATION_DENIED');
   const payload = { ...input };
   if (prepare) delete payload.operation;
